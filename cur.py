@@ -24,10 +24,10 @@ h=args.get('height')
 w=args.get('width')
 
 (ret, frame_init)=cap.read()
-frame_init=frame_init[x:x+w ,y:y+h]
+frame_init=frame_init[x:x+w ,y:y+h] #first cadr
 
-(ret, frame_obj) = cap_init.read()  #create frame's first roi
-frame_obj=cv2.cvtColor(frame_obj,cv2.COLOR_BGR2GRAY)
+#(ret, frame_obj) = cap_init.read()  #create frame's first roi
+#frame_obj=cv2.cvtColor(frame_obj,cv2.COLOR_BGR2GRAY)
 #create histplot
 fig_init, initx = plt.subplots()# create plot for img roi
 fig, ax = plt.subplots()#create plot for frame video stream
@@ -59,37 +59,37 @@ while True:
     (grabbed, frame)  = cap.read()# create frame stream
 
     #cvtColor
-    frame=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-    ROI_x=x-30
-    ROI_y=y-30
-    ROI_width=w+30
-    ROI_hieght=h+30
-    if ROI_x<0:
-        ROI_x=0
-    if ROI_y<0:
-        ROI_y=0
-    if ROI_hieght>frame.shape[1]:
-        ROI_hieght= frame.shape[1]
-    if ROI_width>frame.shape[0]:
-        ROI_width=frame.shape[0]            
-    frame_ROI=frame[ROI_x:ROI_x+ROI_width ,ROI_y:ROI_y+ROI_hieght]
+    frame = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+    gray_init = cv2.cvtColor(frame_init,cv2.COLOR_BGR2GRAY)
+    ROI_x = x-30
+    ROI_y = y-30
+    ROI_width = w+30
+    ROI_hieght = h+30
+    if ROI_x < 0:
+        ROI_x = 0
+    if ROI_y < 0:
+        ROI_y = 0
+    if ROI_hieght > frame.shape[1]:
+        ROI_hieght = frame.shape[1]
+    if ROI_width > frame.shape[0]:
+        ROI_width = frame.shape[0]            
+    frame_ROI = frame[ROI_x:ROI_x+ROI_width ,ROI_y:ROI_y+ROI_hieght]
     print('X=',ROI_x,'y=',ROI_y,'width=',ROI_width,'hiegth=',ROI_hieght)
-    gray_init=cv2.cvtColor(frame_init,cv2.COLOR_BGR2GRAY)
 
     cv2.imshow('VIDEO', frame)  
     cv2.imshow('Image',gray_init)
     cv2.imshow('ROI',frame_ROI)
 
-    numPixles_frame = np.prod(frame.shape[:2])
+    numPixles_frame = np.prod(gray_init.shape[:2])
     numPixles_ROI = np.prod(frame_ROI.shape[:2])
     
     print(numPixles_frame)
     print(numPixles_ROI)
 
-    histogramObj = cv2.calcHist([frame_obj], [0], None, [bins], [0, 255])/numPixles_frame
+    histogramObj = cv2.calcHist([gray_init], [0], None, [bins], [0, 255])/numPixles_frame
     histogramROI = cv2.calcHist([frame_ROI], [0], None, [bins], [0, 255])/numPixles_ROI
 
-    resultHist = histogramObj-histogramROI
+    resultHist = histogramROI-histogramObj
 
     print(resultHist)
     lineGray_Image.set_ydata(resultHist)

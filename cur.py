@@ -3,6 +3,14 @@ import matplotlib.pyplot as plt
 import cv2
 import argparse
 
+def range_segmentator(frame, hist):
+    temp_frame=frame.copy()
+    for i in range(len(hist)):
+        if(hist[i]<0):
+            temp_frame[np.where(frame == i)]=255
+            frame=temp_frame    
+    frame[np.where(frame!=255)]=0        
+    return frame           
 #const
 bins=256
 lw=1
@@ -78,7 +86,6 @@ while True:
 
     cv2.imshow('VIDEO', frame)  
     cv2.imshow('Image',gray_init)
-    cv2.imshow('ROI',frame_ROI)
 
     numPixles_frame = np.prod(gray_init.shape[:2])
     numPixles_ROI = np.prod(frame_ROI.shape[:2])
@@ -90,6 +97,8 @@ while True:
     histogramROI = cv2.calcHist([frame_ROI], [0], None, [bins], [0, 255])/numPixles_ROI
 
     resultHist = histogramROI-histogramObj
+    frame_ROI=range_segmentator(frame_ROI,resultHist)  
+    cv2.imshow('ROI',frame_ROI)
 
     print(resultHist)
     lineGray_Image.set_ydata(resultHist)

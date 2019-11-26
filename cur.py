@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import cv2
 import argparse
 
+
+#fuction for binatyzation img by hist
 def range_segmentator(frame, hist):
     temp_frame=frame.copy()
     for i in range(len(hist)):
@@ -37,6 +39,7 @@ frame_init=frame_init[x:x+w ,y:y+h] #first cadr
 #(ret, frame_obj) = cap_init.read()  #create frame's first roi
 #frame_obj=cv2.cvtColor(frame_obj,cv2.COLOR_BGR2GRAY)
 #create histplot
+
 fig_init, initx = plt.subplots()# create plot for img roi
 fig, ax = plt.subplots()#create plot for frame video stream
 
@@ -67,8 +70,10 @@ while True:
     (grabbed, frame)  = cap.read()# create frame stream
 
     #cvtColor
-    frame = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-    gray_init = cv2.cvtColor(frame_init,cv2.COLOR_BGR2GRAY)
+    frame = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY) #frame on video
+    gray_init = cv2.cvtColor(frame_init,cv2.COLOR_BGR2GRAY) #frame gray
+
+    #create ROI
     ROI_x = x-30
     ROI_y = y-30
     ROI_width = w+30
@@ -80,23 +85,29 @@ while True:
     if ROI_hieght > frame.shape[1]:
         ROI_hieght = frame.shape[1]
     if ROI_width > frame.shape[0]:
-        ROI_width = frame.shape[0]            
+        ROI_width = frame.shape[0]
+
+    #cut ROI in gray frame                
     frame_ROI = frame[ROI_x:ROI_x+ROI_width ,ROI_y:ROI_y+ROI_hieght]
     print('X=',ROI_x,'y=',ROI_y,'width=',ROI_width,'hiegth=',ROI_hieght)
 
     cv2.imshow('VIDEO', frame)  
     cv2.imshow('Image',gray_init)
 
+    #count pix in frame and ROI
     numPixles_frame = np.prod(gray_init.shape[:2])
     numPixles_ROI = np.prod(frame_ROI.shape[:2])
     
     print(numPixles_frame)
     print(numPixles_ROI)
 
+    #create hist
     histogramObj = cv2.calcHist([gray_init], [0], None, [bins], [0, 255])/numPixles_frame
     histogramROI = cv2.calcHist([frame_ROI], [0], None, [bins], [0, 255])/numPixles_ROI
 
+    # находим отличия на гистограммах
     resultHist = histogramROI-histogramObj
+    # бинаризируем на основе найденных отличий
     frame_ROI=range_segmentator(frame_ROI,resultHist)  
     cv2.imshow('ROI',frame_ROI)
 

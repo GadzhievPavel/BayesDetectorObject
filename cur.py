@@ -13,9 +13,28 @@ def range_segmentator(frame, hist):
             frame=temp_frame    
     frame[np.where(frame!=255)]=0        
     return frame           
+
+def get_segments(frame):
+    number=0
+    for i in range(frame.shape[0]):
+        temp_color=0
+        for j in range(frame.shape[1]):
+            color=frame[i][j]
+            if(color!=0):
+                if(temp_color!=color):
+                    number=number+1
+                    segments={number:({'x':i,'y':j})}
+                    temp_color=color
+                else:
+                    segments={number:({'x':i,'y':j})}
+                    temp_color=color
+
+    return  segments  
 #const
 bins=256
 lw=1
+
+i=0
 
 cap = cv2.VideoCapture('video.mp4')#read video stream
 cap_init=cv2.VideoCapture('etlon/etlon.jpg')#read first roi frame
@@ -87,9 +106,13 @@ while True:
     if ROI_width > frame.shape[0]:
         ROI_width = frame.shape[0]
 
+    frame=cv2.GaussianBlur(frame,(5,5),sigmaX=0.9,sigmaY=0.5)
+    
     #cut ROI in gray frame                
     frame_ROI = frame[ROI_x:ROI_x+ROI_width ,ROI_y:ROI_y+ROI_hieght]
-    print('X=',ROI_x,'y=',ROI_y,'width=',ROI_width,'hiegth=',ROI_hieght)
+
+    gray_init=cv2.blur(gray_init,(5,5))
+    frame_ROI=cv2.blur(frame_ROI,(5,5))
 
     cv2.imshow('VIDEO', frame)  
     cv2.imshow('Image',gray_init)
@@ -98,9 +121,6 @@ while True:
     numPixles_frame = np.prod(gray_init.shape[:2])
     numPixles_ROI = np.prod(frame_ROI.shape[:2])
     
-    print(numPixles_frame)
-    print(numPixles_ROI)
-
     #create hist
     histogramObj = cv2.calcHist([gray_init], [0], None, [bins], [0, 255])/numPixles_frame
     histogramROI = cv2.calcHist([frame_ROI], [0], None, [bins], [0, 255])/numPixles_ROI
@@ -109,9 +129,20 @@ while True:
     resultHist = histogramROI-histogramObj
     # бинаризируем на основе найденных отличий
     frame_ROI=range_segmentator(frame_ROI,resultHist)  
-    cv2.imshow('ROI',frame_ROI)
 
-    print(resultHist)
+  
+    frame_ROI=cv2.erode(frame_ROI,(41,41))
+    frame_ROI=cv2.erode(frame_ROI,(11,11))
+    frame_ROI=cv2.blur(frame_ROI,(9,9))
+    ret,frame_ROI=cv2.threshold(frame_ROI,150,255,cv2.THRESH_BINARY)
+    frame_ROI=cv2.erode(frame_ROI,(9,9))
+    #frame_ROI=cv2.dilate(frame_ROI,(33,33))
+    #frame_ROI=cv2.dilate(frame_ROI,(13,5))
+    
+    cv2.imshow('ROI',frame_ROI)
+    status=cv2.imwrite('/home/pavel/cursovoy/img_create/img_'+str(i)+'.jpg',frame_ROI)
+    print(get_segments(frame_ROI))
+    i=i+1
     lineGray_Image.set_ydata(resultHist)
     lineGray.set_ydata(histogramObj)
 

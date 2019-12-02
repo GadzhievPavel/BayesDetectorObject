@@ -42,10 +42,10 @@ cap_init=cv2.VideoCapture('etlon/etlon.jpg')#read first roi frame
 
 #init argument
 parser = argparse.ArgumentParser()
-parser.add_argument('-x',"--coordX",type=int, default=420)
-parser.add_argument('-y','--coordY',type=int, default=0)
-parser.add_argument('-H','--height',type=int, default=230)
-parser.add_argument('-W','--width',type=str, default=100)
+parser.add_argument('-x',"--coordX",type=int, default=0)
+parser.add_argument('-y','--coordY',type=int, default=430)
+parser.add_argument('-H','--height',type=int, default=100)
+parser.add_argument('-W','--width',type=str, default=230)
 args=vars(parser.parse_args())
 
 x=args.get('coordX')
@@ -54,10 +54,8 @@ h=args.get('height')
 w=args.get('width')
 
 (ret, frame_init)=cap.read()
-frame_init=frame_init[x:x+w ,y:y+h] #first cadr
-
-#(ret, frame_obj) = cap_init.read()  #create frame's first roi
-#frame_obj=cv2.cvtColor(frame_obj,cv2.COLOR_BGR2GRAY)
+frame_init=frame_init[y:y+h, x:x+w] #first cadr
+status=cv2.imwrite('/home/pavel/cursovoy/img_create/first_init.jpg',frame_init)
 #create histplot
 
 fig_init, initx = plt.subplots()# create plot for img roi
@@ -94,8 +92,8 @@ while True:
     frame = cv2.cvtColor(frame_сolor,cv2.COLOR_BGR2GRAY) #frame on video
 
     #create ROI
-    ROI_x = x-100
-    ROI_y = y-100
+    ROI_x = x-50
+    ROI_y = y-50
     ROI_width = w+100
     ROI_hieght = h+100
     if ROI_x < 0:
@@ -110,7 +108,7 @@ while True:
     frame=cv2.GaussianBlur(frame,(5,5),sigmaX=0.9,sigmaY=0.5)
     
     #cut ROI in gray frame                
-    frame_ROI = frame[ROI_x:ROI_x+ROI_width ,ROI_y:ROI_y+ROI_hieght]
+    frame_ROI = frame[ROI_y:ROI_y+ROI_hieght ,ROI_x:ROI_x+ROI_width]
     status=cv2.imwrite('/home/pavel/cursovoy/img_create/ROI'+str(i)+'.jpg',frame_ROI)
     gray_init=cv2.blur(gray_init,(5,5))
     frame_ROI=cv2.blur(frame_ROI,(5,5))
@@ -135,21 +133,21 @@ while True:
     frame_ROI=cv2.erode(frame_ROI,(11,11))
     frame_ROI=cv2.blur(frame_ROI,(9,9))
     ret,frame_ROI=cv2.threshold(frame_ROI,150,255,cv2.THRESH_BINARY)
-    frame_ROI=cv2.resize(frame_ROI,(ROI_hieght,ROI_width),interpolation=cv2.INTER_CUBIC)  
-    
+    frame_ROI=cv2.resize(frame_ROI,(ROI_width,ROI_hieght),interpolation=cv2.INTER_CUBIC)  
+    status=cv2.imwrite('/home/pavel/cursovoy/img_create/frame_ROII'+str(i)+'.jpg',frame_ROI)
     _,conturus,hierarhi=cv2.findContours(frame_ROI,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
    
     if(len(conturus)!=0):
         cv2.drawContours(frame_ROI,conturus,-1,(150,0,150),1,cv2.LINE_AA,hierarhi,1)
         c=max(conturus,key=cv2.contourArea)
         x,y,w,h=cv2.boundingRect(c)
-        cv2.rectangle(frame_сolor,(ROI_y+x,ROI_x+y),(ROI_y+x+w,ROI_x+y+h),(150,255,100),2)
-        gray_init=frame[ROI_y+x:ROI_y+x+w, ROI_x+y:ROI_x+y+h]
+        cv2.rectangle(frame_сolor,(ROI_x+x,ROI_y+y),(ROI_x+x+w,ROI_y+y+h),(150,255,100),2)
+        gray_init=frame[ROI_y+y:ROI_y+y+h, ROI_x+x:ROI_x+x+w]
         status=cv2.imwrite('/home/pavel/cursovoy/img_create/gray_init_'+str(i)+'.jpg',gray_init)
-        y=ROI_y+x
-        x=ROI_x+y
-        h=ROI_x+y+h
-        w=ROI_y+x+w
+        y=ROI_y+y
+        x=ROI_x+x
+        h=h
+        w=w
 
     status=cv2.imwrite('/home/pavel/cursovoy/img_create/img_noseg_'+str(i)+'.jpg',frame_сolor)
     cv2.imshow('ROI',frame_ROI)

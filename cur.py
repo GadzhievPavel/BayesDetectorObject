@@ -6,10 +6,10 @@ from util import segmentator_cross, no_hole
 
 
 #fuction for binatyzation img by hist
-def range_segmentator(frame, hist):
+def range_segmentator(frame, hist, histGist):
     temp_frame=frame.copy()
     for i in range(len(hist)):
-        if(hist[i]<0):
+        if(hist[i]<0 and histGist[i]<0):
             temp_frame[np.where(frame == i)]=255
             frame=temp_frame    
     frame[np.where(frame!=255)]=0        
@@ -119,14 +119,29 @@ while True:
     numPixles_frame = np.prod(gray_init.shape[:2])
     numPixles_ROI = np.prod(frame_ROI.shape[:2])
     
+    scar_x=cv2.Scharr(gray_init,-1,1,0)
+    scar_y=cv2.Scharr(gray_init,-1,0,1)
+    scar=scar_x+scar_y
+    status=cv2.imwrite('/home/pavel/cursovoy/img_create/scar_x'+str(i)+'.jpg',scar)
+
+    scar_x=cv2.Scharr(frame_ROI,-1,1,0)
+    scar_y=cv2.Scharr(frame_ROI,-1,0,1)
+    scar=scar_x+scar_y
+    status=cv2.imwrite('/home/pavel/cursovoy/img_create/scar_ROI'+str(i)+'.jpg',scar)
+
+    histogramScarInit= cv2.calcHist([gray_init],[0],None,[bins],[0,255])/numPixles_frame
+    histogramScarROI=cv2.calcHist([frame_ROI],[0],None,[bins],[0,255])/numPixles_ROI
+
+    resultGradient = histogramScarROI-histogramScarInit
+
     #create hist
-    histogramObj = cv2.calcHist([gray_init], [0], None, [bins], [0, 255])/numPixles_frame
-    histogramROI = cv2.calcHist([frame_ROI], [0], None, [bins], [0, 255])/numPixles_ROI
+    histogramObj = cv2.calcHist([gray_init], [0], None, [bins], [0, 255])/numPixles_frame #считать 2 канальное изображение для яркости и градиента 
+    histogramROI = cv2.calcHist([frame_ROI], [0], None, [bins], [0, 255])/numPixles_ROI #погуглить про готовый алгоритм градиентного поля (его модуля)"gradient field" ""
 
     # находим отличия на гистограммах
     resultHist = histogramROI-histogramObj
     # бинаризируем на основе найденных отличий
-    frame_ROI=range_segmentator(frame_ROI,resultHist)
+    frame_ROI=range_segmentator(frame_ROI,resultHist, resultGradient)
     (hi,we)= frame_ROI[:2] 
     frame_ROI=cv2.resize(frame_ROI,(50,50))
     frame_ROI=cv2.erode(frame_ROI,(41,41))

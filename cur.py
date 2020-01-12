@@ -161,8 +161,8 @@ while True:
 
     # находим отличия на гистограммах
     resultHist=my_ROI_hist-my_hist
-    #plt.imshow(resultHist)
-    #plt.show()
+    plt.imshow(resultHist)
+    plt.show()
 
     # бинаризируем на основе найденных отличий
     frame_ROI=range_segmentator(frame_ROI,resultHist)

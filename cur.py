@@ -141,7 +141,7 @@ while True:
     scar_x=cv2.Scharr(frame_ROI,-1,1,0)
     scar_y=cv2.Scharr(frame_ROI,-1,0,1)
     scar_ROI=scar_x+scar_y
-    status=cv2.imwrite('/home/pavel/cursovoy/img_create/scar_ROI'+str(i)+'.jpg',scar)
+    status=cv2.imwrite('/home/pavel/cursovoy/img_create/scar_ROI'+str(i)+'.jpg',scar_ROI)
     #histogramScarROI=cv2.calcHist([scar_ROI],[0],None,[bins],[0,255])/numPixles_ROI
     histogramROI = cv2.calcHist([frame_ROI], [0], None, [bins], [0, 255])/numPixles_ROI #погуглить про готовый алгоритм градиентного поля (его модуля)"gradient field" ""
 
@@ -154,15 +154,15 @@ while True:
 
     my_hist , x_edges, y_edges = np.histogram2d(arr_gray,arr_scar,bins=(150,150),normed=True)
     my_ROI_hist,_,_ = np.histogram2d(arr_ROI_frame,arr_ROI_scar,bins=(150,150),normed=True)
-    plt.imshow(my_hist)
-    plt.show()
-    plt.imshow(my_ROI_hist)
-    plt.show()
+    #plt.imshow(my_hist)
+    #plt.show()
+    #plt.imshow(my_ROI_hist)
+    #plt.show()
 
     # находим отличия на гистограммах
     resultHist=my_ROI_hist-my_hist
-    plt.imshow(resultHist)
-    plt.show()
+    #plt.imshow(resultHist)
+    #plt.show()
 
     # бинаризируем на основе найденных отличий
     frame_ROI=range_segmentator(frame_ROI,resultHist)

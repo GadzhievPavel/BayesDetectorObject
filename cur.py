@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import cv2
 import argparse
 import math
-from util import segmentator_cross, no_hole
 
+bins=255
 
 #fuction for binatyzation img by hist
 def range_segmentator(frame, hist):
@@ -35,10 +35,14 @@ def findDiffHist(frame,frame_ROI):
     return one_result_hist
 
 def findDiff2Hist(frame,frame_ROI):
+    im_frame=cv2.Sobel(frame,-1,1,0)
+    cv2.imshow('Sobel',im_frame)
     scar_x=cv2.Scharr(frame,-1,1,0)
+    print(scar_x.dtype)
     scar_y=cv2.Scharr(frame,-1,0,1)
     scar=scar_x+scar_y
-
+    print(np.min(scar_x))
+    print(np.max(scar_x))
     scar_x=cv2.Scharr(frame_ROI,-1,1,0)
     scar_y=cv2.Scharr(frame_ROI,-1,0,1)
     scar_ROI=scar_x+scar_y
@@ -55,8 +59,7 @@ def findDiff2Hist(frame,frame_ROI):
 
 
 i=0
-
-cap = cv2.VideoCapture('/home/pavel/cursovoy/cycle_img/video200ebanbIxSobak.mpg')#read video stream
+cap = cv2.VideoCapture('/home/pavel/cursovoy/cycle_img/video.mpg')#read video stream
 
 #init argument
 parser = argparse.ArgumentParser()
@@ -79,11 +82,13 @@ status=cv2.imwrite('/home/pavel/cursovoy/img_create/first_init.jpg',frame_init)
 gray_init = cv2.cvtColor(frame_init,cv2.COLOR_BGR2GRAY) #frame gray
 
 while True:
-    (grabbed, frame_сolor)  = cap.read()# create frame stream
-
+    (grabbed, frame_сolor)  = cap.read(cv2.CV_32SC1)# create frame stream
+    print(type(cap))
+    print(frame_сolor.dtype)
     #cvtColor
     frame = cv2.cvtColor(frame_сolor,cv2.COLOR_BGR2GRAY) #frame on video
-
+   # frame = frame.astype(cv2.)/255.
+    print(frame.dtype)
     #create ROI
     ROI_x = x-50# cоздать переменные x1,y1,w1,h1 через GUI задать размеры ROI
     ROI_y = y-50
@@ -106,7 +111,7 @@ while True:
     gray_init=cv2.blur(gray_init,(5,5))# размытие матриц 
     frame_ROI=cv2.blur(frame_ROI,(5,5))#
 
-    cv2.imshow('Image',gray_init)
+    #cv2.imshow('Image',gray_init)
 
     if(diff==True):#выбор алгоритма
         hist=findDiff2Hist(frame=gray_init,frame_ROI=frame_ROI)
@@ -117,13 +122,22 @@ while True:
 
 
     cv2.imshow('frame_ROI',frame_ROI)
-    (hi,we)= frame_ROI[:2] 
-    frame_ROI=cv2.resize(frame_ROI,(50,50))#сжатие ROI
-    frame_ROI=cv2.erode(frame_ROI,(41,41))#эрозия
-    frame_ROI=cv2.erode(frame_ROI,(11,11))
-    frame_ROI=cv2.blur(frame_ROI,(9,9))#размытие 
+    status=cv2.imwrite('/home/pavel/cursovoy/img_create/ROI'+str(i)+'.jpg',frame_ROI)
+    #(hi,we)= frame_ROI[:2] 
+    #frame_ROI=cv2.resize(frame_ROI,(50,50))#сжатие ROI
+    kernal=np.ones((5,5),np.uint8)
+    frame_ROI=cv2.dilate(frame_ROI,kernal)
+    cv2.imshow("1dil",frame_ROI)
+    kernal=np.ones((20,20),np.uint8)
+    frame_ROI=cv2.erode(frame_ROI,kernal)#эрозия
+    cv2.imshow('erode1',frame_ROI)
+    frame_ROI=cv2.dilate(frame_ROI,kernal)
+    cv2.imshow('dil2',frame_ROI)
+    #frame_ROI=cv2.blur(frame_ROI,(15,15))
+    #frame_ROI=cv2.erode(frame_ROI,kernal)
+    #frame_ROI=cv2.blur(frame_ROI,(9,9))#размытие 
     ret,frame_ROI=cv2.threshold(frame_ROI,150,255,cv2.THRESH_BINARY)#порог бинаризации сжатого изображение
-    frame_ROI=cv2.resize(frame_ROI,(ROI_width,ROI_hieght),interpolation=cv2.INTER_CUBIC)  
+    #frame_ROI=cv2.resize(frame_ROI,(ROI_width,ROI_hieght),interpolation=cv2.INTER_CUBIC)  
     status=cv2.imwrite('/home/pavel/cursovoy/img_create/frame_ROII'+str(i)+'.jpg',frame_ROI)
     _,conturus,hierarhi=cv2.findContours(frame_ROI,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
    
@@ -140,15 +154,9 @@ while True:
         w=w
 
     status=cv2.imwrite('/home/pavel/cursovoy/img_create/img_noseg_'+str(i)+'.jpg',frame_сolor)
-    cv2.imshow('ROI',frame_сolor)
-    cv2.imshow('VIDEO', frame)  
+    #cv2.imshow('ROI',frame_сolor)
+    #cv2.imshow('VIDEO', frame)  
     i=i+1
- #   lineGray_Image.set_ydata(resultHist)
- #   lineGray.set_ydata(histogramObj)
-
- #   fig.canvas.draw()
- #   fig_init.canvas.draw()
-
     
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
